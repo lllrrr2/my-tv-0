@@ -10,6 +10,7 @@ import androidx.lifecycle.MutableLiveData
 import com.google.gson.JsonSyntaxException
 import com.lizongying.mytv0.R
 import com.lizongying.mytv0.SP
+import com.lizongying.mytv0.requests.HttpClient
 import com.lizongying.mytv0.showToast
 import io.github.lizongying.Gua
 import kotlinx.coroutines.CoroutineScope
@@ -67,9 +68,8 @@ object TVList {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 Log.i(TAG, "request $serverUrl")
-                val client = okhttp3.OkHttpClient()
                 val request = okhttp3.Request.Builder().url(serverUrl).build()
-                val response = client.newCall(request).execute()
+                val response = HttpClient.okHttpClient.newCall(request).execute()
 
                 if (response.isSuccessful) {
                     val file = File(appDirectory, FILE_NAME)
@@ -236,23 +236,25 @@ object TVList {
         groupModel.clear()
 
         val map: MutableMap<String, MutableList<TVModel>> = mutableMapOf()
-        for ((id, v) in list.withIndex()) {
+        for (v in list) {
             if (v.group !in map) {
                 map[v.group] = mutableListOf()
             }
-            v.id = id
             map[v.group]?.add(TVModel(v))
         }
 
-        var listModelNew: MutableList<TVModel> = mutableListOf()
+        val listModelNew: MutableList<TVModel> = mutableListOf()
         var groupIndex = 2
+        var id = 0
         for ((k, v) in map) {
             val tvListModel = TVListModel(k, groupIndex)
             for ((listIndex, v1) in v.withIndex()) {
+                v1.tv.id = id
                 v1.groupIndex = groupIndex
                 v1.listIndex = listIndex
                 tvListModel.addTVModel(v1)
                 listModelNew.add(v1)
+                id++
             }
             groupModel.addTVListModel(tvListModel)
             groupIndex++
@@ -278,7 +280,6 @@ object TVList {
     }
 
     fun setPosition(position: Int): Boolean {
-        Log.i(TAG, "setPosition $position/${size()}")
         if (position >= size()) {
             return false
         }

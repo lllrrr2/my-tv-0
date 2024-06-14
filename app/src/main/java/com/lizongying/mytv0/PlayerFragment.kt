@@ -33,6 +33,7 @@ import com.lizongying.mytv0.models.TVModel
 
 class PlayerFragment : Fragment(), SurfaceHolder.Callback {
     private var _binding: PlayerBinding? = null
+    private val binding get() = _binding!!
 
     private var player: ExoPlayer? = null
     private var exoPlayer: SimpleExoPlayer? = null
@@ -149,6 +150,8 @@ class PlayerFragment : Fragment(), SurfaceHolder.Callback {
         player?.run {
             IgnoreSSLCertificate.ignore()
             val httpDataSource = DefaultHttpDataSource.Factory()
+            httpDataSource.setKeepPostFor302Redirects(true)
+            httpDataSource.setAllowCrossProtocolRedirects(true)
             httpDataSource.setTransferListener(object : TransferListener {
                 override fun onTransferInitializing(
                     source: DataSource,

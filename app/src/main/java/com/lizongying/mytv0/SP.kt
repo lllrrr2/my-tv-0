@@ -31,7 +31,11 @@ object SP {
 
     private const val KEY_CHANNEL = "channel"
 
+    private const val KEY_DEFAULT_LIKE = "default_like"
+
     private const val KEY_LIKE = "like"
+
+    private const val KEY_PROXY = "proxy"
 
     private lateinit var sp: SharedPreferences
 
@@ -89,6 +93,10 @@ object SP {
         get() = sp.getInt(KEY_CHANNEL, 0)
         set(value) = sp.edit().putInt(KEY_CHANNEL, value).apply()
 
+    var defaultLike: Boolean
+        get() = sp.getBoolean(KEY_DEFAULT_LIKE, false)
+        set(value) = sp.edit().putBoolean(KEY_DEFAULT_LIKE, value).apply()
+
     fun getLike(id: Int): Boolean {
         val stringSet = sp.getStringSet(KEY_LIKE, emptySet())
         return stringSet?.contains(id.toString()) ?: false
@@ -108,4 +116,8 @@ object SP {
     fun deleteLike() {
         sp.edit().remove(KEY_LIKE).apply()
     }
+
+    var proxy: String?
+        get() = sp.getString(KEY_PROXY, "")
+        set(value) = sp.edit().putString(KEY_PROXY, value).apply()
 }
