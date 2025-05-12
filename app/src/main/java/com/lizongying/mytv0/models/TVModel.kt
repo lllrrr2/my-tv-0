@@ -17,7 +17,6 @@ import androidx.media3.exoplayer.source.MediaSource
 import androidx.media3.exoplayer.source.ProgressiveMediaSource
 import com.lizongying.mytv0.SP
 import com.lizongying.mytv0.data.EPG
-import com.lizongying.mytv0.data.Program
 import com.lizongying.mytv0.data.SourceType
 import com.lizongying.mytv0.data.TV
 import com.lizongying.mytv0.requests.HttpClient
@@ -60,14 +59,12 @@ class TVModel(var tv: TV) : ViewModel() {
     private var _epg = MutableLiveData<List<EPG>>()
     val epg: LiveData<List<EPG>>
         get() = _epg
+    val epgValue: List<EPG>
+        get() = _epg.value ?: emptyList()
 
     fun setEpg(epg: List<EPG>) {
         _epg.value = epg
     }
-
-    private var _program = MutableLiveData<MutableList<Program>>()
-    val program: LiveData<MutableList<Program>>
-        get() = _program
 
     private val _videoIndex = MutableLiveData<Int>()
     val videoIndex: LiveData<Int>
@@ -239,7 +236,6 @@ class TVModel(var tv: TV) : ViewModel() {
     init {
         _videoIndex.value = max(0, min(tv.uris.size - 1, tv.videoIndex))
         _like.value = SP.getLike(tv.id)
-        _program.value = mutableListOf()
     }
 
     companion object {

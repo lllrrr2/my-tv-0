@@ -43,11 +43,11 @@ class SimpleServer(private val context: Context, private val viewModel: MainView
         return when (session.uri) {
             "/api/settings" -> handleSettings()
             "/api/sources" -> handleSources()
-            "/api/import-text" -> handleImportFromText(session)
-            "/api/import-uri" -> handleImportFromUri(session)
+            "/api/import-text" -> handleImportText(session)
+            "/api/import-uri" -> handleImportUri(session)
             "/api/proxy" -> handleProxy(session)
             "/api/epg" -> handleEPG(session)
-            "/api/channel" -> handleDefaultChannel(session)
+            "/api/default-channel" -> handleDefaultChannel(session)
             "/api/remove-source" -> handleRemoveSource(session)
             else -> handleStaticContent()
         }
@@ -96,7 +96,6 @@ class SimpleServer(private val context: Context, private val viewModel: MainView
                 e.message
             )
         }
-
         return newFixedLengthResponse(Response.Status.OK, "application/json", response)
     }
 
@@ -105,11 +104,11 @@ class SimpleServer(private val context: Context, private val viewModel: MainView
 
         var sources = ""
         var success = false
-        for (a in urls) {
-            Log.i(TAG, "request $a")
+        for (u in urls) {
+            Log.i(TAG, "request $u")
             withContext(Dispatchers.IO) {
                 try {
-                    val request = okhttp3.Request.Builder().url(a).build()
+                    val request = okhttp3.Request.Builder().url(u).build()
                     val response = HttpClient.okHttpClient.newCall(request).execute()
 
                     if (response.isSuccessful) {
@@ -141,7 +140,7 @@ class SimpleServer(private val context: Context, private val viewModel: MainView
         )
     }
 
-    private fun handleImportFromText(session: IHTTPSession): Response {
+    private fun handleImportText(session: IHTTPSession): Response {
         R.string.start_config_channel.showToast()
         val response = ""
         try {
@@ -151,7 +150,7 @@ class SimpleServer(private val context: Context, private val viewModel: MainView
                 }
             }
         } catch (e: Exception) {
-            Log.e(TAG, "handleImportFromText", e)
+            Log.e(TAG, "handleImportText", e)
             return newFixedLengthResponse(
                 Response.Status.INTERNAL_ERROR,
                 MIME_PLAINTEXT,
@@ -161,7 +160,7 @@ class SimpleServer(private val context: Context, private val viewModel: MainView
         return newFixedLengthResponse(Response.Status.OK, "text/plain", response)
     }
 
-    private fun handleImportFromUri(session: IHTTPSession): Response {
+    private fun handleImportUri(session: IHTTPSession): Response {
         R.string.start_config_channel.showToast()
         val response = ""
         try {
@@ -173,7 +172,7 @@ class SimpleServer(private val context: Context, private val viewModel: MainView
                 }
             }
         } catch (e: Exception) {
-            Log.e(TAG, "handleImportFromUri", e)
+            Log.e(TAG, "handleImportUri", e)
             return newFixedLengthResponse(
                 Response.Status.INTERNAL_ERROR,
                 MIME_PLAINTEXT,

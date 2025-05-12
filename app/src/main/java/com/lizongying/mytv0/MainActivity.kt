@@ -40,6 +40,7 @@ class MainActivity : AppCompatActivity() {
     private var timeFragment = TimeFragment()
     private var menuFragment = MenuFragment()
     private var settingFragment = SettingFragment()
+    private var programFragment = ProgramFragment()
 
     private val handler = Handler(Looper.myLooper()!!)
     private val delayHideMenu = 10 * 1000L
@@ -284,7 +285,7 @@ class MainActivity : AppCompatActivity() {
         return super.onTouchEvent(event)
     }
 
-    private inner class GestureListener(private val context: Context) :
+    private inner class GestureListener(context: Context) :
         GestureDetector.SimpleOnGestureListener() {
 
         private var screenWidth = windowManager.defaultDisplay.width
@@ -313,7 +314,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         override fun onLongPress(e: MotionEvent) {
-            Log.i(TAG, "onLongPress")
+            showProgram()
         }
 
         override fun onFling(
@@ -432,8 +433,8 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun play(position: Int) {
-        if (position > -1 && position < viewModel.groupModel.getAllList()!!.size()) {
+    fun play(position: Int): Boolean {
+        return if (position > -1 && position < viewModel.groupModel.getAllList()!!.size()) {
             val prevGroup = viewModel.groupModel.positionValue
             val tvModel = viewModel.groupModel.getPosition(position)
 
@@ -445,8 +446,10 @@ class MainActivity : AppCompatActivity() {
             if (currentGroup != prevGroup) {
                 menuFragment.updateList(currentGroup)
             }
+            true
         } else {
             R.string.channel_not_exist.showToast()
+            false
         }
     }
 
@@ -555,10 +558,10 @@ class MainActivity : AppCompatActivity() {
 
     private val hideSetting = Runnable {
         hideFragment(settingFragment)
-        addTimeFragment()
+        showTimeFragment()
     }
 
-    fun addTimeFragment() {
+    fun showTimeFragment() {
         if (SP.time) {
             showFragment(timeFragment)
         } else {
@@ -566,7 +569,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun showChannel(channel: String) {
+    private fun showChannel(channel: Int) {
         if (!menuFragment.isHidden) {
             return
         }
@@ -583,6 +586,10 @@ class MainActivity : AppCompatActivity() {
 
 
     private fun channelUp() {
+        if (programFragment.isAdded && !programFragment.isHidden) {
+            return
+        }
+
         if ((!menuFragment.isAdded || menuFragment.isHidden) && (!settingFragment.isAdded || settingFragment.isHidden)) {
             if (SP.channelReversal) {
                 next()
@@ -593,6 +600,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun channelDown() {
+        if (programFragment.isAdded && !programFragment.isHidden) {
+            return
+        }
+
         if ((!menuFragment.isAdded || menuFragment.isHidden) && (!settingFragment.isAdded || settingFragment.isHidden)) {
             if (SP.channelReversal) {
                 prev()
@@ -608,9 +619,19 @@ class MainActivity : AppCompatActivity() {
             return
         }
 
+        if (programFragment.isAdded && !programFragment.isHidden) {
+            hideFragment(programFragment)
+            return
+        }
+
         if (settingFragment.isAdded && !settingFragment.isHidden) {
             hideFragment(settingFragment)
-            addTimeFragment()
+            showTimeFragment()
+            return
+        }
+
+        if (channelFragment.isAdded && channelFragment.isVisible) {
+            channelFragment.hideSelf()
             return
         }
 
@@ -628,6 +649,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showSetting() {
+        if (programFragment.isAdded && !programFragment.isHidden) {
+            return
+        }
+
         if (menuFragment.isAdded && !menuFragment.isHidden) {
             return
         }
@@ -637,11 +662,41 @@ class MainActivity : AppCompatActivity() {
         settingActive()
     }
 
+    private fun showProgram() {
+        if (menuFragment.isAdded && !menuFragment.isHidden) {
+            return
+        }
+
+        if (settingFragment.isAdded && !settingFragment.isHidden) {
+            return
+        }
+
+        viewModel.groupModel.getCurrent()?.let {
+            if (it.epgValue.isEmpty()) {
+                R.string.epg_is_empty.showToast()
+                return
+            }
+        }
+
+        showFragment(programFragment)
+    }
+
+    private fun hideProgram(): Boolean {
+        if (!programFragment.isAdded || programFragment.isHidden) {
+            return false
+        }
+
+        hideFragment(programFragment)
+        return true
+    }
+
     fun showWebViewPopup(url: String) {
         val binding = SettingsWebBinding.inflate(layoutInflater)
 
         val webView = binding.web
         webView.settings.javaScriptEnabled = true
+        webView.isFocusableInTouchMode = true
+        webView.isFocusable = true
         webView.loadUrl(url)
 
         val popupWindow = PopupWindow(
@@ -668,53 +723,18 @@ class MainActivity : AppCompatActivity() {
     fun onKey(keyCode: Int): Boolean {
         Log.d(TAG, "keyCode $keyCode")
         when (keyCode) {
-            KeyEvent.KEYCODE_0 -> {
-                showChannel("0")
-                return true
-            }
-
-            KeyEvent.KEYCODE_1 -> {
-                showChannel("1")
-                return true
-            }
-
-            KeyEvent.KEYCODE_2 -> {
-                showChannel("2")
-                return true
-            }
-
-            KeyEvent.KEYCODE_3 -> {
-                showChannel("3")
-                return true
-            }
-
-            KeyEvent.KEYCODE_4 -> {
-                showChannel("4")
-                return true
-            }
-
-            KeyEvent.KEYCODE_5 -> {
-                showChannel("5")
-                return true
-            }
-
-            KeyEvent.KEYCODE_6 -> {
-                showChannel("6")
-                return true
-            }
-
-            KeyEvent.KEYCODE_7 -> {
-                showChannel("7")
-                return true
-            }
-
-            KeyEvent.KEYCODE_8 -> {
-                showChannel("8")
-                return true
-            }
-
-            KeyEvent.KEYCODE_9 -> {
-                showChannel("9")
+            KeyEvent.KEYCODE_0,
+            KeyEvent.KEYCODE_1,
+            KeyEvent.KEYCODE_2,
+            KeyEvent.KEYCODE_3,
+            KeyEvent.KEYCODE_4,
+            KeyEvent.KEYCODE_5,
+            KeyEvent.KEYCODE_6,
+            KeyEvent.KEYCODE_7,
+            KeyEvent.KEYCODE_8,
+            KeyEvent.KEYCODE_9,
+                -> {
+                showChannel(keyCode - 7)
                 return true
             }
 
@@ -754,10 +774,20 @@ class MainActivity : AppCompatActivity() {
             }
 
             KeyEvent.KEYCODE_ENTER -> {
+                if (channelFragment.isAdded && channelFragment.isVisible) {
+                    channelFragment.playNow()
+                    return true
+                }
+
                 showFragment(menuFragment)
             }
 
             KeyEvent.KEYCODE_DPAD_CENTER -> {
+                if (channelFragment.isAdded && channelFragment.isVisible) {
+                    channelFragment.playNow()
+                    return true
+                }
+
                 showFragment(menuFragment)
             }
 
@@ -778,14 +808,11 @@ class MainActivity : AppCompatActivity() {
             }
 
             KeyEvent.KEYCODE_DPAD_LEFT -> {
-                if (!settingFragment.isAdded || settingFragment.isHidden) {
-                    showFragment(menuFragment)
-                }
+                showProgram()
             }
 
             KeyEvent.KEYCODE_DPAD_RIGHT -> {
                 showSetting()
-//                return true
             }
         }
         return false
@@ -804,7 +831,7 @@ class MainActivity : AppCompatActivity() {
 
         isSafeToPerformFragmentTransactions = true
 
-        addTimeFragment()
+        showTimeFragment()
     }
 
     override fun onPause() {

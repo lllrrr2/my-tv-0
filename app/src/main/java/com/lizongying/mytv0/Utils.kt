@@ -59,6 +59,13 @@ object Utils {
         ).format(Date(System.currentTimeMillis() - between))
     }
 
+    fun getDateFormat(format: String, seconds: Int): String {
+        return SimpleDateFormat(
+            format,
+            Locale.CHINA
+        ).format(Date(seconds * 1000L))
+    }
+
     fun getDateTimestamp(): Long {
         return (System.currentTimeMillis() - between) / 1000
     }
@@ -141,7 +148,10 @@ object Utils {
     }
 
     fun formatUrl(url: String): String {
-        if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("file://") || url.startsWith("socks://") || url.startsWith("socks5://")) {
+        if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("file://") || url.startsWith(
+                "socks://"
+            ) || url.startsWith("socks5://")
+        ) {
             return url
         }
 
@@ -167,6 +177,7 @@ object Utils {
                 "https://www.ghproxy.cc/",
                 "https://cf.ghproxy.cc/",
                 "https://ghp.ci/",
+                "https://ghfast.top"
             ).map {
                 "$it$url"
             }
